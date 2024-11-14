@@ -6,8 +6,8 @@ import remarkGfm from 'remark-gfm';
 const withMDX = nextMDX({
   extension: /\.mdx?$/,
   options: {
-    remarkPlugins: [remarkGfm],
-    rehypePlugins: [rehypePrism, rehypeAutolinkHeadings],
+    remarkPlugins: [],
+    rehypePlugins: [],
   },
 });
 
