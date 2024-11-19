@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import Header from "@/components/Header";
+import Image from "next/image";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -31,6 +32,24 @@ export default function RootLayout({
       >
         <main className="mx-auto mb-16 max-w-5xl px-5 py-24 sm:px-8">
           <Header />
+          <Image
+            width={1500}
+            height={550}
+            className='absolute left-1/2 top-0 -z-10 -translate-x-1/2'
+            src='/gradient-background-top.png'
+            alt=''
+            role='presentation'
+            priority
+          />
+          <Image
+            width={1500}
+            height={447}
+            className='absolute -bottom-6 left-1/2 -z-10 -translate-x-1/2'
+            src='/gradient-background-bottom.png'
+            alt=''
+            role='presentation'
+            priority
+          />
           {children}
         </main>
       </body>
