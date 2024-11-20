@@ -1,8 +1,6 @@
 import path from "path";
 import fs from "fs";
 import matter from "gray-matter";
-import { serialize } from "next-mdx-remote/serialize";
-import { MDXRemoteSerializeResult } from "next-mdx-remote";
 
 interface FrontMatter {
   title: string;
@@ -11,59 +9,44 @@ interface FrontMatter {
   [key: string]: any;
 }
 
-const root: string = process.cwd();
-const POSTS_PATH: string = path.join(root, "content");
+interface Post extends FrontMatter {
+  content: string;
+}
 
-export const allSlugs: string[] = fs.readdirSync(POSTS_PATH);
 
+const ROOT_DIR = process.cwd();
+const POSTS_PATH = path.join(ROOT_DIR, "content");
+export const allSlugs = fs.readdirSync(POSTS_PATH);
 export const formatSlug = (slug: string): string => slug.replace(/\.mdx$/, "");
 
-export const getPostBySlug = async (slug: string): Promise<{
-  source: MDXRemoteSerializeResult;
-  frontMatter: Record<string, any>;
-}> => {
-  const postFilePath: string = path.join(POSTS_PATH, `${slug}.mdx`);
-  const source = fs.readFileSync(postFilePath, "utf-8");
+const readFileSync = (filePath: string): string => fs.readFileSync(filePath, "utf-8");
+const getAllSlugs = (): string[] => fs.readdirSync(POSTS_PATH);
+const dateSortDesc = (a: string, b: string): number => (a > b ? -1 : a < b ? 1 : 0);
 
-  const { content, data } = matter(source);
+export const getPostBySlug = async (slug: string): Promise<Post> => {
+  const filePath = path.join(POSTS_PATH, `${slug}.mdx`);
+  const fileContents = readFileSync(filePath);
+  const { content, data } = matter(fileContents);
 
-  const mdxSource = await serialize(content);
-
-  const frontMatter = {
-    ...data,
-    slug,
-  };
   return {
-    source: mdxSource,
-    frontMatter,
-  };
+    content,
+    ...data,
+  } as Post;
 };
 
-export const getAllPosts = (): Array<FrontMatter> => {
-  const frontMatter: Array<{ slug: string; title: string; date: string;[key: string]: any }> = [];
-
-  allSlugs.forEach((slug) => {
-    const source = fs.readFileSync(path.join(POSTS_PATH, slug), "utf-8");
-
+export const getAllPosts = (): FrontMatter[] => {
+  const slugs = getAllSlugs();
+  const posts = slugs.map((slug) => {
+    const source = readFileSync(path.join(POSTS_PATH, slug));
     const { data } = matter(source);
 
-    const title = data.title;
-    const date = data.date ? new Date(data.date).toISOString() : new Date().toISOString();
-
-    frontMatter.push({
+    return {
       ...data,
       slug: formatSlug(slug),
-      title,
-      date,
-    });
+      title: data.title,
+      date: data.date ? new Date(data.date).toISOString() : new Date().toISOString(),
+    };
   });
 
-  return frontMatter.sort((a, b) => dateSortDesc(a.date, b.date));
-};
-
-
-const dateSortDesc = (a: string, b: string): number => {
-  if (a > b) return -1;
-  if (a < b) return 1;
-  return 0;
+  return posts.sort((a, b) => dateSortDesc(a.date, b.date));
 };
